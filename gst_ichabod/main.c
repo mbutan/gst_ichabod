@@ -5,7 +5,6 @@
 //  Created by Charley Robinson on 9/10/17.
 //
 
-#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <getopt.h>
@@ -22,7 +21,6 @@
 
 int main(int argc, char *argv[])
 {
-  printf("dupa");
   int c;
   char cwd[1024];
   g_print("%d\n", getpid());
