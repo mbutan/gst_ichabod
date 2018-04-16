@@ -59,11 +59,10 @@ void attach_sink(const char *location, struct gst_container_s* container) {
   ret = ichabod_bin_attach_mux_sink_pad(container->bin, a_mux_sink, v_mux_sink);
 }
 
-// struct gboolean remove_values (gpointer key, gpointer value, gpointer user_data) {
-//   g_free (key);
-//   g_free (value);
-//   return TRUE;
-// }
+static void free_a_hash_table_entry (gpointer key, gpointer value, gpointer user_data) {
+  g_free (key);
+  g_free (value);
+}
 
 int ichabod_attach_rtmp(struct ichabod_bin_s* bin, GSList *broadcast_urls) {
   GHashTable* sink_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -84,8 +83,10 @@ int ichabod_attach_rtmp(struct ichabod_bin_s* bin, GSList *broadcast_urls) {
 
   // Go through each element of broadcast list to append bin struct
   g_slist_foreach(broadcast_urls, (GFunc)attach_sink, container);
-  // g_hash_table_foreach_remove (mux_hash, remove_values, NULL);
-  // g_hash_table_foreach_remove (sink_hash, remove_values, NULL);
+
+  free(container);
+  g_hash_table_foreach(mux_hash, free_a_hash_table_entry, NULL);
+  g_hash_table_foreach(sink_hash, free_a_hash_table_entry, NULL);
 
   return 1;
 }
@@ -101,13 +102,15 @@ int ichabod_attach_file(struct ichabod_bin_s* bin, GSList* paths) {
   container->sink_factory_name = "filesink";
   container->mux_factory_name = "mp4mux";
   container->audio_request_pad = "audio_%u";
-  container->video_request_pad = "audio_%u";
+  container->video_request_pad = "video_%u";
   container->mux_hash = mux_hash;
   container->sink_hash = NULL;
 
   // Go through each element of broadcast list to append bin struct
   g_slist_foreach(paths, (GFunc)attach_sink, container);
-  // g_hash_table_foreach_remove (mux_hash, remove_values, NULL);
+
+  free(container);
+  g_hash_table_foreach(mux_hash, free_a_hash_table_entry, NULL);
 
   return 1;
 }
