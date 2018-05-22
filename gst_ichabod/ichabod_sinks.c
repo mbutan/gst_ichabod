@@ -66,7 +66,9 @@ int ichabod_attach_rtmp(struct ichabod_bin_s* bin, GSList *broadcast_urls) {
   GHashTable* sink_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   GHashTable* mux_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   // don't sync on sink. sink should not sync.
-  g_hash_table_insert(sink_hash, g_strdup("sync"), g_strdup("1"));
+  g_hash_table_insert(sink_hash, g_strdup("sync"), g_strdup("0"));
+  // moreover, make sure these sinks don't slack off on state changes
+  g_hash_table_insert(sink_hash, g_strdup("async"), g_strdup("0"));
   g_hash_table_insert(mux_hash, g_strdup("streamable"), g_strdup("1"));
 
   // Prepare rmpt container, which needs to be passed into sink loop function
@@ -90,7 +92,12 @@ int ichabod_attach_rtmp(struct ichabod_bin_s* bin, GSList *broadcast_urls) {
 }
 
 int ichabod_attach_file(struct ichabod_bin_s* bin, GSList* paths) {
+  GHashTable* sink_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
   GHashTable* mux_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+  // don't sync on sink. sink should not sync.
+  g_hash_table_insert(sink_hash, g_strdup("sync"), g_strdup("0"));
+  // moreover, make sure these sinks don't slack off on state changes
+  g_hash_table_insert(sink_hash, g_strdup("async"), g_strdup("0"));
   // don't sync on sink. sink should not sync.
   g_hash_table_insert(mux_hash, g_strdup("faststart"), g_strdup("1"));
 
@@ -102,7 +109,7 @@ int ichabod_attach_file(struct ichabod_bin_s* bin, GSList* paths) {
   container->audio_request_pad = "audio_%u";
   container->video_request_pad = "video_%u";
   container->mux_hash = mux_hash;
-  container->sink_hash = NULL;
+  container->sink_hash = sink_hash;
 
   // Go through each element of broadcast list to append bin struct
   g_slist_foreach(paths, (GFunc)attach_sink, container);
